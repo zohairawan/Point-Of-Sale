@@ -1,7 +1,7 @@
 package utils;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
-import storage.Products;
+import storage.Product;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,32 +18,32 @@ public class PointOfSaleDB {
 
     private static final String config = "src/main/resources/point-of-sale.properties";
 
-    public static List<Products> getProductsTableAsList() {
+    public static List<Product> getProductsTableAsList() {
         Properties properties = loadPropertiesFile(config);
         MysqlDataSource pointOfSaleDB = loadDataSource(properties);
         return getProducts(pointOfSaleDB, properties);
     }
 
-    private static List<Products> getProducts(MysqlDataSource pointOfSaleDB, Properties properties) {
-        String query = "SELECT * FROM products";
-        List<Products> products = new ArrayList<>();
+    private static List<Product> getProducts(MysqlDataSource pointOfSaleDB, Properties properties) {
         try (Connection connection = pointOfSaleDB.getConnection(
                 properties.getProperty("user"),
                 System.getenv("MYSQL_PASS"));
              Statement statement = connection.createStatement()
         ) {
+            String query = "SELECT * FROM products";
             ResultSet resultSet = statement.executeQuery(query);
+            List<Product> products = new ArrayList<>();
             while (resultSet.next()) {
-                products.add(new Products(
+                products.add(new Product(
                         resultSet.getInt("plu"),
                         resultSet.getString("name"),
                         resultSet.getDouble("price"),
                         resultSet.getInt("calculation_code")));
             }
+            return products;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return products;
     }
 
     private static Properties loadPropertiesFile(String config) {
