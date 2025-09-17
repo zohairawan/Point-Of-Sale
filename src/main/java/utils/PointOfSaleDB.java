@@ -17,7 +17,6 @@ import java.util.Properties;
 public class PointOfSaleDB {
 
     public static List<Products> getTableAsList() {
-        List<Products> products = new ArrayList<>();
         Properties properties = new Properties();
         String config = "src/main/resources/point-of-sale.properties";
         try {
@@ -30,8 +29,9 @@ public class PointOfSaleDB {
         dataSource.setServerName(properties.getProperty("serverName"));
         dataSource.setPort(Integer.parseInt(properties.getProperty("port")));
         dataSource.setDatabaseName(properties.getProperty("databaseName"));
-        String query = "SELECT * FROM products";
 
+        String query = "SELECT * FROM products";
+        List<Products> products = new ArrayList<>();
         try (Connection connection = dataSource.getConnection(
                 properties.getProperty("user"),
                 System.getenv("MYSQL_PASS"));
