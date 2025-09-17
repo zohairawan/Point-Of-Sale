@@ -16,23 +16,18 @@ import java.util.Properties;
 
 public class PointOfSaleDB {
 
-    public static List<Products> getTableAsList() {
-        Properties properties = new Properties();
-        String config = "src/main/resources/point-of-sale.properties";
-        try {
-            properties.load(Files.newInputStream(Path.of(config), StandardOpenOption.READ));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private static final String config = "src/main/resources/point-of-sale.properties";
 
-        MysqlDataSource dataSource = new MysqlDataSource();
-        dataSource.setServerName(properties.getProperty("serverName"));
-        dataSource.setPort(Integer.parseInt(properties.getProperty("port")));
-        dataSource.setDatabaseName(properties.getProperty("databaseName"));
+    public static List<Products> getProductsTableAsList() {
+        Properties properties = loadPropertiesFile(config);
+        MysqlDataSource pointOfSaleDB = loadDataSource(properties);
+        return getProducts(pointOfSaleDB, properties);
+    }
 
+    private static List<Products> getProducts(MysqlDataSource pointOfSaleDB, Properties properties) {
         String query = "SELECT * FROM products";
         List<Products> products = new ArrayList<>();
-        try (Connection connection = dataSource.getConnection(
+        try (Connection connection = pointOfSaleDB.getConnection(
                 properties.getProperty("user"),
                 System.getenv("MYSQL_PASS"));
              Statement statement = connection.createStatement()
@@ -40,14 +35,32 @@ public class PointOfSaleDB {
             ResultSet resultSet = statement.executeQuery(query);
             while (resultSet.next()) {
                 products.add(new Products(
-                                resultSet.getInt("plu"),
-                                resultSet.getString("name"),
-                                resultSet.getDouble("price"),
-                                resultSet.getInt("calculation_code")));
+                        resultSet.getInt("plu"),
+                        resultSet.getString("name"),
+                        resultSet.getDouble("price"),
+                        resultSet.getInt("calculation_code")));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         return products;
+    }
+
+    private static Properties loadPropertiesFile(String config) {
+        Properties properties = new Properties();
+        try {
+            properties.load(Files.newInputStream(Path.of(config), StandardOpenOption.READ));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return properties;
+    }
+
+    private static MysqlDataSource loadDataSource(Properties properties) {
+        MysqlDataSource dataSource = new MysqlDataSource();
+        dataSource.setServerName(properties.getProperty("serverName"));
+        dataSource.setPort(Integer.parseInt(properties.getProperty("port")));
+        dataSource.setDatabaseName(properties.getProperty("databaseName"));
+        return dataSource;
     }
 }
