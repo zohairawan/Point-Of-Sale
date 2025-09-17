@@ -48,7 +48,6 @@ public class PointOfSaleDB {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        products.forEach(System.out::println);
         return products;
     }
 }
